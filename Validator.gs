@@ -81,9 +81,15 @@ function validateDateSpanDetailed(actual) {
     for (let part of parts) {
       const regex = createFlexibleRegex(label);
       if (regex.test(part)) {
-        const datePart = part.replace(regex, "").trim();
-        const dateMatch = datePart.match(/^(\d{4}\.\d{2}\.\d{2}–\d{4}\.\d{2}\.\d{2})/);
-        if (dateMatch && dateMatch[1]) {
+        const valuePart = part.replace(regex, "").trim().toLowerCase();
+        console.log(valuePart);
+        // ✅ Допустимые варианты:
+        // 1. Строка "not specified"
+        // 2. Формат даты YYYY.MM.DD–YYYY.MM.DD
+        if (
+          valuePart === "not specified" ||
+          DATE_RANGE_REGEX.test(valuePart)
+        ) {
           foundValid = true;
           break;
         }
