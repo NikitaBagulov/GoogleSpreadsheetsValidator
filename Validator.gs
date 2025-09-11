@@ -1,4 +1,8 @@
 
+// SPREADSHEET_ID could be retrived from URL
+// https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
+const SPREADSHEET_ID = "SPREADSHEET_ID" 	
+
 // === COLUMNS a.k.a. FIELDS ===
 
 const SCHEMA_FIELDS = [
@@ -29,6 +33,15 @@ const COLORS = {
 };
 
 // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+
+function init() {
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  console.log(sheet.getName());
+}
+
+function getSheet() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID).getActiveSheet();
+}
 
 function isValidDateRange(text) {
   return typeof text === "string" && DATE_RANGE_REGEX.test(text.trim());
@@ -228,7 +241,7 @@ function onEdit(e) {
     Logger.log(JSON.stringify(e));
     return;
   }
-  const sheet = e.source.getActiveSheet();
+  const sheet = e.range.getSheet();
   if (SKIP_SHEETS.includes(sheet.getName())) return;
 
   const col = e.range.getColumn();
@@ -246,7 +259,7 @@ function onChange(e) {
     Logger.log(JSON.stringify(e));
     return;
   }
-  const sheet = e.source.getActiveSheet();
+  const sheet = e.range.getSheet();
   if (SKIP_SHEETS.includes(sheet.getName())) return;
 
   if (["INSERT_ROW", "INSERT_GRID", "EDIT"].includes(e.changeType)) {
@@ -264,7 +277,7 @@ function validateAllBlocksOnSheet(sheet) {
 }
 
 function validateAllBlocks() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = getSheet();
   if (SKIP_SHEETS.includes(sheet.getName())) {
     console.log("⚠️ Валидация отключена для листа '" + sheet.getName() + "'");
     return;
@@ -273,4 +286,18 @@ function validateAllBlocks() {
   console.log("✅ Полная валидация завершена на листе: " + sheet.getName());
 }
 
+// Installable triggers for standalone script (not bounded to the spread sheet)
+function createEditTrigger() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  ScriptApp.newTrigger("onEdit")
+           .forSpreadsheet(ss)
+           .onEdit()
+           .create();
+}
 
+function createChangeTrigger() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  ScriptApp.newTrigger("onChange")
+           .forSpreadsheet(ss)
+           .onChange()
+           .create();
