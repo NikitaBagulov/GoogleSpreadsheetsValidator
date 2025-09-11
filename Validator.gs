@@ -1,10 +1,13 @@
-// === КОНСТАНТЫ ===
+
+// === COLUMNS a.k.a. FIELDS ===
+
 const SCHEMA_FIELDS = [
   "DOI", "Year", "InputData", "FeatureExtractionEngineering", "PreprocessingTransformation",
   "Dataset", "DatasetTimeSpan", "DatasetQuality", "MLProblem", "ScientificTask",
   "MLTechnique", "Comment", "Shortcomings", "Benchmarks"
 ];
 
+// === SUBPOINTS for FIELDS ===
 const SUBPOINTS = {
   "InputData": ["Name:", "InstrumentSource:", "Type:", "InputFeatures:"],
   "Dataset": ["Format:", "MarkupLabeling:"],
@@ -14,7 +17,8 @@ const SUBPOINTS = {
   "MLTechnique": ["ModelType:", "Architecture:", "TrainingDetails:"]
 };
 
-const ALLOWED_SHEETS = ["Bagulov", "Popov"]; // ← ЗАМЕНИТЕ НА СВОИ ЛИСТЫ
+// point list that should NOT be processed with this validation
+const SKIP_SHEETS = ["Contributors"]; 
 
 const DATE_RANGE_REGEX = /^\d{4}\.\d{2}\.\d{2}–\d{4}\.\d{2}\.\d{2}$/;
 
@@ -219,9 +223,13 @@ function validateBlock(sheet, startRow) {
 // === ТРИГГЕРЫ ===
 
 function onEdit(e) {
-  if (!e?.range) return;
+
+  if (!e?.range) {
+    Logger.log(JSON.stringify(e));
+    return;
+  }
   const sheet = e.source.getActiveSheet();
-  if (!ALLOWED_SHEETS.includes(sheet.getName())) return;
+  if (SKIP_SHEETS.includes(sheet.getName())) return;
 
   const col = e.range.getColumn();
   const row = e.range.getRow();
@@ -234,9 +242,12 @@ function onEdit(e) {
 }
 
 function onChange(e) {
-  if (!e?.source) return;
+  if (!e?.range) {
+    Logger.log(JSON.stringify(e));
+    return;
+  }
   const sheet = e.source.getActiveSheet();
-  if (!ALLOWED_SHEETS.includes(sheet.getName())) return;
+  if (SKIP_SHEETS.includes(sheet.getName())) return;
 
   if (["INSERT_ROW", "INSERT_GRID", "EDIT"].includes(e.changeType)) {
     validateAllBlocksOnSheet(sheet);
@@ -254,10 +265,12 @@ function validateAllBlocksOnSheet(sheet) {
 
 function validateAllBlocks() {
   const sheet = SpreadsheetApp.getActiveSheet();
-  if (!ALLOWED_SHEETS.includes(sheet.getName())) {
+  if (SKIP_SHEETS.includes(sheet.getName())) {
     console.log("⚠️ Валидация отключена для листа '" + sheet.getName() + "'");
     return;
   }
   validateAllBlocksOnSheet(sheet);
   console.log("✅ Полная валидация завершена на листе: " + sheet.getName());
 }
+
+
